@@ -13,7 +13,7 @@ function setConnected(connected) {
 }
 
 function connect() {
-    ws = new WebSocket("ws://localhost:8080/ws/game");
+    ws = new WebSocket("ws://localhost:4567/ws/game");
     ws.onopen = evt => {
                     setConnected(true);
                     console.log('Connected');

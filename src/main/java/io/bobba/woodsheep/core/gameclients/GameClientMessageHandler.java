@@ -1,9 +1,10 @@
 package io.bobba.woodsheep.core.gameclients;
 
-import io.bobba.woodsheep.core.communication.IncomingEvent;
+import io.bobba.woodsheep.core.communication.IncomingEventHandler;
+import io.bobba.woodsheep.core.communication.OpCode;
 import io.bobba.woodsheep.core.communication.incoming.GenericIncomingMessage;
-import io.bobba.woodsheep.core.communication.incoming.handshake.LoginEvent;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -13,32 +14,53 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @Component
 public class GameClientMessageHandler {
-  private final Map<String, IncomingEvent> requestHandlers;
+
+  private final Map<String, IncomingEventHandler<?>> requestHandlers = new HashMap<>();
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  public GameClientMessageHandler() {
-    this.requestHandlers = new HashMap<>();
-    this.registerHandler(new LoginEvent());
+  public GameClientMessageHandler(List<IncomingEventHandler<?>> discoveredHandlers) {
+    for (IncomingEventHandler<?> handler : discoveredHandlers) {
+      OpCode opCode = handler.getClass().getAnnotation(OpCode.class);
+
+      if (opCode == null) {
+        throw new IllegalStateException(
+            "Handler " + handler.getClass().getName() + " is missing @OpCode");
+      }
+
+      if (requestHandlers.containsKey(opCode.value())) {
+        throw new IllegalStateException("Duplicate OpCode: " + opCode.value());
+      }
+
+      requestHandlers.put(opCode.value(), handler);
+    }
   }
 
   public void handleMessage(GameClient session, String message) {
     try {
-      final GenericIncomingMessage data =
-          OBJECT_MAPPER.readValue(message, GenericIncomingMessage.class);
-      final String opCode = data.requestType();
-      final IncomingEvent handler = this.requestHandlers.getOrDefault(opCode, null);
+      GenericIncomingMessage data = OBJECT_MAPPER.readValue(message, GenericIncomingMessage.class);
+
+      IncomingEventHandler<?> handler = requestHandlers.get(data.requestType());
+
       if (handler == null) {
-        log.warn("Invalid OpCode {}", opCode);
-      } else {
-        log.debug("Handled {} with {}", opCode, handler.getClass().getSimpleName());
-        handler.handle(session, data.payload());
+        log.warn("Invalid OpCode {}", data.requestType());
+        return;
       }
-    } catch (JacksonException e) {
-      log.warn("Invalid message object");
+      log.debug("Handled {} with {}", data.requestType(), handler.getClass().getSimpleName());
+
+      handleTyped(session, data, handler);
+
+    } catch (Exception e) {
+      log.warn("Invalid message {}", message, e);
+      session.stop();
     }
   }
 
-  private void registerHandler(IncomingEvent incomingEvent) {
-    this.requestHandlers.put(incomingEvent.getOpCode(), incomingEvent);
+  private <T> void handleTyped(
+      GameClient session, GenericIncomingMessage data, IncomingEventHandler<T> handler)
+      throws JacksonException {
+
+    T payload = OBJECT_MAPPER.treeToValue(data.payload(), handler.payloadType());
+
+    handler.handle(session, payload);
   }
 }
