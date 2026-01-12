@@ -24,6 +24,9 @@ public class RoomManager {
   public void prepareRoomForUser(User user, String roomId) {
     Room currentRoom = user.getCurrentRoom();
     if (currentRoom != null) {
+      if (currentRoom.getId().equals(roomId)) {
+        return;
+      }
       currentRoom.removeUserFromRoom(user);
     }
     Room newRoom = this.rooms.get(roomId);
