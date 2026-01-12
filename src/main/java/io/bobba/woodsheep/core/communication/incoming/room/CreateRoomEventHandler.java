@@ -5,6 +5,7 @@ import io.bobba.woodsheep.core.communication.protocol.IncomingEventHandler;
 import io.bobba.woodsheep.core.communication.protocol.OpCode;
 import io.bobba.woodsheep.core.gameclients.GameClient;
 import io.bobba.woodsheep.core.rooms.RoomManager;
+import io.bobba.woodsheep.core.users.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -18,7 +19,10 @@ public class CreateRoomEventHandler implements IncomingEventHandler<EmptyObjectP
 
   @Override
   public void handle(GameClient session, EmptyObjectPayload payload) {
-    this.roomManager.createRoom(session);
+    final User user = session.getUser();
+    if (user != null) {
+      this.roomManager.createRoom(user);
+    }
   }
 
   @Override

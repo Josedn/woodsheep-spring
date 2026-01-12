@@ -1,6 +1,7 @@
 package io.bobba.woodsheep.core.rooms;
 
 import io.bobba.woodsheep.core.communication.outgoing.room.AddUserToRoomComposer;
+import io.bobba.woodsheep.core.communication.outgoing.room.ChatMessageComposer;
 import io.bobba.woodsheep.core.communication.outgoing.room.PrepareRoomComposer;
 import io.bobba.woodsheep.core.communication.outgoing.room.RemoveUserFromRoomComposer;
 import io.bobba.woodsheep.core.communication.protocol.OutgoingMessage;
@@ -56,6 +57,13 @@ public class Room {
       }
     }
     return null;
+  }
+
+  public void handleChatMessage(User user, String message) {
+    RoomUser roomUser = this.getRoomUserByUser(user);
+    if (roomUser != null) {
+      this.sendMessage(new ChatMessageComposer(roomUser.getVirtualId(), message));
+    }
   }
 
   public List<RoomUser> getUnSyncUsers() {
