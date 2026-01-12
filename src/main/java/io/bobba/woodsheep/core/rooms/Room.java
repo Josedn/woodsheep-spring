@@ -1,6 +1,7 @@
 package io.bobba.woodsheep.core.rooms;
 
 import io.bobba.woodsheep.core.communication.outgoing.room.AddUserToRoomComposer;
+import io.bobba.woodsheep.core.communication.outgoing.room.PrepareRoomComposer;
 import io.bobba.woodsheep.core.communication.outgoing.room.RemoveUserFromRoomComposer;
 import io.bobba.woodsheep.core.communication.protocol.OutgoingMessage;
 import io.bobba.woodsheep.core.users.User;
@@ -34,6 +35,7 @@ public class Room {
       user.setCurrentRoom(this);
       this.sendMessage(new AddUserToRoomComposer(roomUser));
       this.users.put(roomUser.getVirtualId(), roomUser);
+      user.getSession().sendMessage(new PrepareRoomComposer(this.id));
       List<RoomUser> usersCopy = getUnSyncUsers();
       user.getSession().sendMessage(new AddUserToRoomComposer(usersCopy));
     }
@@ -56,7 +58,7 @@ public class Room {
     return null;
   }
 
-  private List<RoomUser> getUnSyncUsers() {
+  public List<RoomUser> getUnSyncUsers() {
     List<RoomUser> usersCopy;
     synchronized (users) {
       usersCopy = new ArrayList<>(users.values());

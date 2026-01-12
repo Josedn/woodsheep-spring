@@ -1,7 +1,11 @@
 package io.bobba.woodsheep.core.rooms;
 
+import io.bobba.woodsheep.core.communication.outgoing.room.RoomListComposer;
+import io.bobba.woodsheep.core.gameclients.GameClient;
 import io.bobba.woodsheep.core.users.User;
 import io.bobba.woodsheep.misc.WoodsheepUUID;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
@@ -27,5 +31,18 @@ public class RoomManager {
     if (newRoom != null) {
       newRoom.addUserToRoom(user);
     }
+  }
+
+  public void sendRoomList(GameClient session) {
+    List<Room> roomsCopy = this.getUnSyncRooms();
+    session.sendMessage(new RoomListComposer(roomsCopy));
+  }
+
+  private List<Room> getUnSyncRooms() {
+    List<Room> roomsCopy;
+    synchronized (rooms) {
+      roomsCopy = new ArrayList<>(rooms.values());
+    }
+    return roomsCopy;
   }
 }

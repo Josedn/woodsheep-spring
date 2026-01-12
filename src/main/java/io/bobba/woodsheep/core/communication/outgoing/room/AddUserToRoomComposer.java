@@ -6,7 +6,7 @@ import java.util.List;
 
 public class AddUserToRoomComposer extends OutgoingMessage {
 
-  List<UserRecord> roomUsers;
+  private final List<UserRecord> roomUsers;
 
   public AddUserToRoomComposer(List<RoomUser> roomUsers) {
     super("addUserToRoom");
