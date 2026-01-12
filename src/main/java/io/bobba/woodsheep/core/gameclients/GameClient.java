@@ -20,7 +20,7 @@ public class GameClient {
   private final WebSocketSession session;
   private User user;
 
-  private void sendMessage(OutgoingMessage message) {
+  public void sendMessage(OutgoingMessage message) {
     if (this.session.isOpen()) {
       try {
         this.session.sendMessage(new TextMessage(message.stringify()));
@@ -48,6 +48,9 @@ public class GameClient {
       } catch (IOException e) {
         log.warn("Error closing session", e);
       }
+    }
+    if (this.user != null) {
+      this.user.onStop();
     }
     // TODO: close everything else
   }

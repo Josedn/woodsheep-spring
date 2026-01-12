@@ -10,8 +10,8 @@ public class LoginOkEventComposer extends OutgoingMessage {
 
   public LoginOkEventComposer(User user) {
     super("loginOk");
-    this.userId = user.id();
-    this.username = user.username();
+    this.userId = user.getId();
+    this.username = user.getUsername();
   }
 
   @Override
