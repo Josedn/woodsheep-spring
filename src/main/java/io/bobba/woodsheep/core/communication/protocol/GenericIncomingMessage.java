@@ -1,4 +1,4 @@
-package io.bobba.woodsheep.core.communication.incoming;
+package io.bobba.woodsheep.core.communication.protocol;
 
 import tools.jackson.databind.JsonNode;
 

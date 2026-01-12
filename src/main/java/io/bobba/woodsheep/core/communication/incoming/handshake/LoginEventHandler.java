@@ -1,8 +1,8 @@
 package io.bobba.woodsheep.core.communication.incoming.handshake;
 
-import io.bobba.woodsheep.core.communication.IncomingEventHandler;
-import io.bobba.woodsheep.core.communication.OpCode;
 import io.bobba.woodsheep.core.communication.incoming.handshake.LoginEventHandler.LoginEventMessage;
+import io.bobba.woodsheep.core.communication.protocol.IncomingEventHandler;
+import io.bobba.woodsheep.core.communication.protocol.OpCode;
 import io.bobba.woodsheep.core.gameclients.GameClient;
 import io.bobba.woodsheep.core.users.UserManager;
 import lombok.RequiredArgsConstructor;

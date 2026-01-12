@@ -1,4 +1,4 @@
-package io.bobba.woodsheep.core.communication.outgoing;
+package io.bobba.woodsheep.core.communication.protocol;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;

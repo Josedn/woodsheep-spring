@@ -1,4 +1,4 @@
-package io.bobba.woodsheep.core.communication;
+package io.bobba.woodsheep.core.communication.protocol;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

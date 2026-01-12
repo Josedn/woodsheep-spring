@@ -1,6 +1,6 @@
 package io.bobba.woodsheep.core.communication.outgoing.user;
 
-import io.bobba.woodsheep.core.communication.outgoing.OutgoingMessage;
+import io.bobba.woodsheep.core.communication.protocol.OutgoingMessage;
 import io.bobba.woodsheep.core.users.User;
 
 public class LoginOkEventComposer extends OutgoingMessage {

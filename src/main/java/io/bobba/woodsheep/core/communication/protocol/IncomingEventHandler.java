@@ -1,4 +1,4 @@
-package io.bobba.woodsheep.core.communication;
+package io.bobba.woodsheep.core.communication.protocol;
 
 import io.bobba.woodsheep.core.gameclients.GameClient;
 

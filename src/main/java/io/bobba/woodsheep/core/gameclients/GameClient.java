@@ -1,7 +1,7 @@
 package io.bobba.woodsheep.core.gameclients;
 
-import io.bobba.woodsheep.core.communication.outgoing.OutgoingMessage;
 import io.bobba.woodsheep.core.communication.outgoing.user.LoginOkEventComposer;
+import io.bobba.woodsheep.core.communication.protocol.OutgoingMessage;
 import io.bobba.woodsheep.core.users.User;
 import java.io.IOException;
 import lombok.Data;

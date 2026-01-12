@@ -1,8 +1,8 @@
 package io.bobba.woodsheep.core.gameclients;
 
-import io.bobba.woodsheep.core.communication.IncomingEventHandler;
-import io.bobba.woodsheep.core.communication.OpCode;
-import io.bobba.woodsheep.core.communication.incoming.GenericIncomingMessage;
+import io.bobba.woodsheep.core.communication.protocol.GenericIncomingMessage;
+import io.bobba.woodsheep.core.communication.protocol.IncomingEventHandler;
+import io.bobba.woodsheep.core.communication.protocol.OpCode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
