@@ -27,5 +27,5 @@ public class AddUserToRoomComposer extends OutgoingMessage {
     return this.roomUsers;
   }
 
-  private record UserRecord(int virtualId, String username) {}
+  public record UserRecord(int virtualId, String username) {}
 }

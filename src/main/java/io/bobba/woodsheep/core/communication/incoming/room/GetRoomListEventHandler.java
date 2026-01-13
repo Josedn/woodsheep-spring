@@ -22,6 +22,7 @@ public class GetRoomListEventHandler implements IncomingEventHandler<EmptyObject
     final User user = session.getUser();
     if (user != null) {
       this.roomManager.sendRoomList(user);
+      user.leaveRoom();
     }
   }
 

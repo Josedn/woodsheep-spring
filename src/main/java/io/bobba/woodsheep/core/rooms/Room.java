@@ -39,12 +39,15 @@ public class Room {
       user.setCurrentRoom(this);
       this.sendMessage(new AddUserToRoomComposer(roomUser));
       this.users.put(roomUser.getVirtualId(), roomUser);
-      user.getSession()
-          .sendMessage(new RoomInfoComposer(this.id, "base", false, false, 4, 30, 7, 10));
-      List<RoomUser> usersCopy = getUnSyncUsers();
-      user.getSession().sendMessage(new AddUserToRoomComposer(usersCopy));
+      this.serializeRoomInfo(user);
       log.debug("User added to room: {}", user.getUsername());
     }
+  }
+
+  public void serializeRoomInfo(User user) {
+    List<RoomUser> usersCopy = getUnSyncUsers();
+    user.getSession().sendMessage(new RoomInfoComposer(this.id, "base", false, true, 4, 30, 7, 10));
+    user.getSession().sendMessage(new AddUserToRoomComposer(usersCopy));
   }
 
   public void sendMessage(OutgoingMessage outgoingMessage) {

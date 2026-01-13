@@ -26,6 +26,7 @@ public class RoomManager {
     Room currentRoom = user.getCurrentRoom();
     if (currentRoom != null) {
       if (currentRoom.getId().equals(roomId)) {
+        currentRoom.serializeRoomInfo(user);
         return;
       }
       currentRoom.removeUserFromRoom(user);

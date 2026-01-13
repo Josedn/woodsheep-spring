@@ -14,6 +14,10 @@ public class User {
   private Room currentRoom;
 
   public void onStop() {
+    this.leaveRoom();
+  }
+
+  public void leaveRoom() {
     if (currentRoom != null) {
       currentRoom.removeUserFromRoom(this);
     }
