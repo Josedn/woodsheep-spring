@@ -23,7 +23,9 @@ public class GameClient {
   public void sendMessage(OutgoingMessage message) {
     if (this.session.isOpen()) {
       try {
-        this.session.sendMessage(new TextMessage(message.stringify()));
+        final String json = message.stringify();
+        log.trace("Sent: {}", json);
+        this.session.sendMessage(new TextMessage(json));
       } catch (IOException e) {
         log.warn("Error sending message", e);
       } catch (JacksonException e) {

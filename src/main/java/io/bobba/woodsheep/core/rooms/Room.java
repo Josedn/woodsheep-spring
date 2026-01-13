@@ -12,7 +12,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 @Data
 public class Room {
@@ -27,6 +29,7 @@ public class Room {
       users.remove(roomUser.getVirtualId());
       user.onRoomLeave();
       sendMessage(new RemoveUserFromRoomComposer(roomUser.getVirtualId()));
+      log.debug("User removed from room: {}", user.getUsername());
     }
   }
 
@@ -40,6 +43,7 @@ public class Room {
           .sendMessage(new RoomInfoComposer(this.id, "base", false, false, 4, 30, 7, 10));
       List<RoomUser> usersCopy = getUnSyncUsers();
       user.getSession().sendMessage(new AddUserToRoomComposer(usersCopy));
+      log.debug("User added to room: {}", user.getUsername());
     }
   }
 

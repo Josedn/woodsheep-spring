@@ -1,6 +1,7 @@
 package io.bobba.woodsheep.core.rooms;
 
 import io.bobba.woodsheep.core.communication.outgoing.room.RoomListComposer;
+import io.bobba.woodsheep.core.communication.outgoing.room.RoomRejectedComposer;
 import io.bobba.woodsheep.core.users.User;
 import io.bobba.woodsheep.misc.WoodsheepUUID;
 import java.util.ArrayList;
@@ -32,6 +33,8 @@ public class RoomManager {
     Room newRoom = this.rooms.get(roomId);
     if (newRoom != null) {
       newRoom.addUserToRoom(user);
+    } else {
+      user.getSession().sendMessage(new RoomRejectedComposer("invalid"));
     }
   }
 

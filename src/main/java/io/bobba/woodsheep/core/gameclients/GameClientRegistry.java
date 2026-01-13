@@ -17,6 +17,8 @@ public class GameClientRegistry {
   }
 
   public void remove(WebSocketSession session) {
+    final GameClient gameClient = this.sessions.get(session.getId());
+    gameClient.stop();
     this.sessions.remove(session.getId());
   }
 
