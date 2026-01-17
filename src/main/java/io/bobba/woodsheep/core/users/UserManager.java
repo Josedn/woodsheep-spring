@@ -26,7 +26,8 @@ public class UserManager {
     if (user == null) {
       user = new User(WoodsheepUUID.generateUUID());
       user.setUsername(UsernameGenerator.generateUsername());
-      this.users.put(user.getId(), user);
+      // Key users by SSO for consistent lookup
+      this.users.put(sso, user);
     }
     user.setSession(session);
     session.setUser(user);

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@OpCode("chatMessage")
+@OpCode(io.bobba.woodsheep.core.communication.protocol.Op.CHAT_MESSAGE)
 @RequiredArgsConstructor
 public class SendChatMessageHandler
     implements IncomingEventHandler<SendChatMessageHandler.SendChatMessageMessage> {
@@ -22,7 +22,9 @@ public class SendChatMessageHandler
     final User user = session.getUser();
     if (user != null) {
       final Room room = user.getCurrentRoom();
-      room.handleChatMessage(user, payload.message());
+      if (room != null) {
+        room.handleChatMessage(user, payload.message());
+      }
     }
   }
 

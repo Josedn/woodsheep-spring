@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
-import tools.jackson.core.JacksonException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,10 +25,10 @@ public class GameClient {
         final String json = message.stringify();
         log.trace("Sent: {}", json);
         this.session.sendMessage(new TextMessage(json));
+      } catch (com.fasterxml.jackson.core.JacksonException e) {
+        log.warn("Error converting to JSON", e);
       } catch (IOException e) {
         log.warn("Error sending message", e);
-      } catch (JacksonException e) {
-        log.warn("Error converting to JSON", e);
       }
     } else {
       this.stop();

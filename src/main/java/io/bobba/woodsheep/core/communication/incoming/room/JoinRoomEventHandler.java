@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@OpCode("joinRoom")
+@OpCode(io.bobba.woodsheep.core.communication.protocol.Op.JOIN_ROOM)
 @RequiredArgsConstructor
 public class JoinRoomEventHandler implements IncomingEventHandler<JoinRoomEventMessage> {
   private final RoomManager roomManager;

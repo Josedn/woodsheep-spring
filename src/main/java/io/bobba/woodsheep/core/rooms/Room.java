@@ -21,7 +21,8 @@ public class Room {
 
   private final String id;
   private final Map<Integer, RoomUser> users = new ConcurrentHashMap<>();
-  private int userCounter = 0;
+  private java.util.concurrent.atomic.AtomicInteger userCounter =
+      new java.util.concurrent.atomic.AtomicInteger(0);
 
   public void removeUserFromRoom(User user) {
     RoomUser roomUser = this.getRoomUserByUser(user);
@@ -35,7 +36,7 @@ public class Room {
 
   public void addUserToRoom(User user) {
     if (user.getSession() != null) {
-      RoomUser roomUser = new RoomUser(this.userCounter++, user);
+      RoomUser roomUser = new RoomUser(this.userCounter.getAndIncrement(), user);
       user.setCurrentRoom(this);
       this.sendMessage(new AddUserToRoomComposer(roomUser));
       this.users.put(roomUser.getVirtualId(), roomUser);

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@OpCode("roomList")
+@OpCode(io.bobba.woodsheep.core.communication.protocol.Op.ROOM_LIST)
 @RequiredArgsConstructor
 public class GetRoomListEventHandler implements IncomingEventHandler<EmptyObjectPayload> {
   private final RoomManager roomManager;

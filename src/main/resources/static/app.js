@@ -21,9 +21,9 @@ function connect() {
 
 
     ws.onmessage = evt => {
-                    const event = JSON.parse(e.data);
-                      console.log(event);
-                      //showGreeting(JSON.parse(greeting.body).content);
+                    const event = JSON.parse(evt.data);
+                    console.log(event);
+                    //showGreeting(JSON.parse(greeting.body).content);
                 };
 }
 
@@ -34,7 +34,7 @@ function disconnect() {
 function sendName() {
     ws.send(JSON.stringify({
       requestType: "login",
-      payload: {ssoTicket: $("#name").val()}
+      payload: {sso: $("#name").val()}
     }));
 }
 

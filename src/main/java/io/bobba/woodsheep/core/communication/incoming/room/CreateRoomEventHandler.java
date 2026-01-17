@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@OpCode("createRoom")
+@OpCode(io.bobba.woodsheep.core.communication.protocol.Op.CREATE_ROOM)
 @RequiredArgsConstructor
 public class CreateRoomEventHandler implements IncomingEventHandler<EmptyObjectPayload> {
   private final RoomManager roomManager;

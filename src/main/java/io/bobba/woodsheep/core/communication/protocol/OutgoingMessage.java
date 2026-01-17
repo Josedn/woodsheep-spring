@@ -1,10 +1,10 @@
 package io.bobba.woodsheep.core.communication.protocol;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 
 @RequiredArgsConstructor
 public abstract class OutgoingMessage {

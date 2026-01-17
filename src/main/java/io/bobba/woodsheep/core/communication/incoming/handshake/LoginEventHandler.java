@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@OpCode("login")
+@OpCode(io.bobba.woodsheep.core.communication.protocol.Op.LOGIN)
 @RequiredArgsConstructor
 public class LoginEventHandler implements IncomingEventHandler<LoginEventMessage> {
   private final UserManager userManager;
