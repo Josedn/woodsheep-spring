@@ -10,10 +10,9 @@ import java.util.Map;
 
 public record MapTemplate(
     List<Integer> numbers,
-    List<Resource> portResources, // null => 3:1
-    List<Resource> tileResources, // includes null for desert
-    Map<Coordinate, TileType> topology // TileType.RESOURCE, Water.class, or (Port.class, Direction)
-    ) {
+    List<Resource> portResources, // None => 3:1
+    List<Resource> tileResources, // includes None for desert
+    Map<Coordinate, TileType> topology) {
   public static MapTemplate buildBaseTemplate() {
     List<Integer> numbers =
         Arrays.asList(11, 3, 6, 5, 4, 9, 10, 8, 4, 11, 12, 9, 10, 8, 3, 6, 2, 5);

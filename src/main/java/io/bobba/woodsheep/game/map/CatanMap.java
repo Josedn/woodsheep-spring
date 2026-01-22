@@ -9,17 +9,29 @@ import io.bobba.woodsheep.game.model.Edge;
 import io.bobba.woodsheep.game.model.EdgeRef;
 import io.bobba.woodsheep.game.model.NodeRef;
 import io.bobba.woodsheep.game.model.Resource;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.javatuples.Pair;
 
 public class CatanMap {
-  public final Map<Coordinate, LandTile> landTiles = new LinkedHashMap<>();
-  public final Map<Integer, LandTile> tilesById = new HashMap<>();
   public final Map<Coordinate, Tile> tiles = new LinkedHashMap<>();
+  public final Map<Coordinate, LandTile> landTiles = new LinkedHashMap<>();
+  public final Map<Integer, List<LandTile>> adjacentTilesByNode =
+      new HashMap<>(); // nodeId -> tiles
+  public final Map<Integer, LandTile> tilesById = new HashMap<>();
+
+  public final Set<Integer> landNodes = new HashSet<>();
+  public final Set<Long> edgeKeys = new HashSet<>(); // encoded (min,max)
+  public final Map<Integer, Set<Integer>> nodeNeighbors = new HashMap<>();
+  public final Map<Integer, Integer> tileNumberById = new HashMap<>();
+  public final Map<Integer, Resource> tileResourceById = new HashMap<>();
+  public final Map<Integer, Set<Integer>> tileNodesById = new HashMap<>();
 
   public static CatanMap base() {
     return fromTemplate(MapTemplate.buildBaseTemplate());
@@ -28,6 +40,7 @@ public class CatanMap {
   private static CatanMap fromTemplate(MapTemplate mapTemplate) {
     CatanMap m = new CatanMap();
     buildTiles(m, mapTemplate);
+    m.rebuildCaches();
     return m;
   }
 
@@ -150,5 +163,29 @@ public class CatanMap {
       case NORTHWEST -> Pair.with(NodeRef.NORTHWEST, NodeRef.NORTH);
       case NORTHEAST -> Pair.with(NodeRef.NORTH, NodeRef.NORTHEAST);
     };
+  }
+
+  private void rebuildCaches() {
+    // land nodes
+    for (LandTile lt : landTiles.values()) {
+      landNodes.addAll(lt.nodes().values());
+      for (Edge e : lt.edges().values()) {
+        int a = Math.min(e.nodeA(), e.nodeB());
+        int b = Math.max(e.nodeA(), e.nodeB());
+        long key = (((long) a) << 32) | (b & 0xffffffffL);
+        edgeKeys.add(key);
+        nodeNeighbors.computeIfAbsent(a, k -> new HashSet<>()).add(b);
+        nodeNeighbors.computeIfAbsent(b, k -> new HashSet<>()).add(a);
+      }
+      tileNumberById.put(lt.id(), lt.number());
+      tileResourceById.put(lt.id(), lt.resource());
+      tileNodesById.put(lt.id(), new HashSet<>(lt.nodes().values()));
+    }
+    // adjacent tiles by node
+    for (LandTile lt : landTiles.values()) {
+      for (Integer nodeId : lt.nodes().values()) {
+        adjacentTilesByNode.computeIfAbsent(nodeId, k -> new ArrayList<>()).add(lt);
+      }
+    }
   }
 }
