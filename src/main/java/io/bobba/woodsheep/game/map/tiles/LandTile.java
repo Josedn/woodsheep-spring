@@ -1,8 +1,8 @@
 package io.bobba.woodsheep.game.map.tiles;
 
-import io.bobba.woodsheep.game.model.Edge;
-import io.bobba.woodsheep.game.model.EdgeRef;
-import io.bobba.woodsheep.game.model.NodeRef;
+import io.bobba.woodsheep.game.map.Edge;
+import io.bobba.woodsheep.game.map.EdgeRef;
+import io.bobba.woodsheep.game.map.NodeRef;
 import io.bobba.woodsheep.game.model.Resource;
 import java.util.Map;
 
