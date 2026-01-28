@@ -1,4 +1,6 @@
-package io.bobba.woodsheep.game.map;
+package io.bobba.woodsheep.game.map.geometry;
+
+import io.bobba.woodsheep.game.map.Coordinate;
 
 public enum Direction {
   NORTHEAST(new Coordinate(1, 0, -1)),

@@ -1,4 +1,4 @@
-package io.bobba.woodsheep.game.map;
+package io.bobba.woodsheep.game.map.geometry;
 
 public enum NodeRef {
   NORTH,

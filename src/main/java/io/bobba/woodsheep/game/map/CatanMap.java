@@ -1,5 +1,9 @@
 package io.bobba.woodsheep.game.map;
 
+import io.bobba.woodsheep.game.map.geometry.Direction;
+import io.bobba.woodsheep.game.map.geometry.Edge;
+import io.bobba.woodsheep.game.map.geometry.EdgeRef;
+import io.bobba.woodsheep.game.map.geometry.NodeRef;
 import io.bobba.woodsheep.game.map.tiles.LandTile;
 import io.bobba.woodsheep.game.map.tiles.Tile;
 import io.bobba.woodsheep.game.map.tiles.TileType;
@@ -168,7 +172,7 @@ public class CatanMap {
       for (Edge e : lt.edges().values()) {
         int a = Math.min(e.nodeA(), e.nodeB());
         int b = Math.max(e.nodeA(), e.nodeB());
-        long key = (((long) a) << 32) | (b & 0xffffffffL);
+        long key = Edge.edgeKey(a, b);
         edgeKeys.add(key);
         nodeNeighbors.computeIfAbsent(a, k -> new HashSet<>()).add(b);
         nodeNeighbors.computeIfAbsent(b, k -> new HashSet<>()).add(a);

@@ -1,4 +1,4 @@
-package io.bobba.woodsheep.game.map;
+package io.bobba.woodsheep.game.map.geometry;
 
 import java.util.Objects;
 
@@ -39,5 +39,10 @@ public final class Edge {
   @Override
   public String toString() {
     return "(" + nodeA + "," + nodeB + ")";
+  }
+
+  public static long edgeKey(int nodeA, int nodeB) {
+    int min = Math.min(nodeA, nodeB), max = Math.max(nodeA, nodeB);
+    return (((long) min) << 32) | (max & 0xffffffffL);
   }
 }
