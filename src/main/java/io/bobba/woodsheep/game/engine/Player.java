@@ -13,7 +13,7 @@ public abstract class Player {
     this.isBot = isBot;
   }
 
-  public abstract Action<?> decide(List<Action<?>> playable);
+  public abstract Action<?> decide(Game game, List<Action<?>> playable);
 
   public void resetState() {}
 

@@ -126,4 +126,8 @@ public class Board {
     }
     roads.put(key, color);
   }
+
+  public Map.Entry<PlayerColor, BuildingType> buildingAt(int nodeId) {
+    return buildings.get(nodeId);
+  }
 }

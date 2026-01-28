@@ -167,25 +167,39 @@ public class CatanMap {
 
   private void rebuildCaches() {
     // land nodes
-    for (LandTile lt : landTiles.values()) {
-      landNodes.addAll(lt.nodes().values());
-      for (Edge e : lt.edges().values()) {
-        int a = Math.min(e.nodeA(), e.nodeB());
-        int b = Math.max(e.nodeA(), e.nodeB());
-        long key = Edge.edgeKey(a, b);
+    for (LandTile tile : landTiles.values()) {
+      landNodes.addAll(tile.nodes().values());
+      for (Edge edge : tile.edges().values()) {
+        int nodeA = Math.min(edge.nodeA(), edge.nodeB());
+        int nodeB = Math.max(edge.nodeA(), edge.nodeB());
+        long key = Edge.edgeKey(nodeA, nodeB);
         edgeKeys.add(key);
-        nodeNeighbors.computeIfAbsent(a, k -> new HashSet<>()).add(b);
-        nodeNeighbors.computeIfAbsent(b, k -> new HashSet<>()).add(a);
+        nodeNeighbors.computeIfAbsent(nodeA, k -> new HashSet<>()).add(nodeB);
+        nodeNeighbors.computeIfAbsent(nodeB, k -> new HashSet<>()).add(nodeA);
       }
-      tileNumberById.put(lt.id(), lt.number());
-      tileResourceById.put(lt.id(), lt.resource());
-      tileNodesById.put(lt.id(), new HashSet<>(lt.nodes().values()));
+      tileNumberById.put(tile.id(), tile.number());
+      tileResourceById.put(tile.id(), tile.resource());
+      tileNodesById.put(tile.id(), new HashSet<>(tile.nodes().values()));
     }
     // adjacent tiles by node
-    for (LandTile lt : landTiles.values()) {
-      for (Integer nodeId : lt.nodes().values()) {
-        adjacentTilesByNode.computeIfAbsent(nodeId, k -> new ArrayList<>()).add(lt);
+    for (LandTile tile : landTiles.values()) {
+      for (Integer nodeId : tile.nodes().values()) {
+        adjacentTilesByNode.computeIfAbsent(nodeId, k -> new ArrayList<>()).add(tile);
       }
     }
+  }
+
+  public Set<Integer> getTileIdsByNumber(int number) {
+    Set<Integer> ids = new HashSet<>();
+    for (Map.Entry<Integer, Integer> entry : tileNumberById.entrySet()) {
+      if (entry.getValue() != null && entry.getValue() == number) {
+        ids.add(entry.getKey());
+      }
+    }
+    return ids;
+  }
+
+  public Set<Integer> getTileNodes(int tileId) {
+    return tileNodesById.getOrDefault(tileId, Set.of());
   }
 }
