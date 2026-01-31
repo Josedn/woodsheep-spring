@@ -38,13 +38,13 @@ public class Game {
   public PlayerColor winningColor() {
     // Basic win rule: 10 VP or all pieces exhausted (simplified)
     for (var playerStatusEntry : state.playerState.entrySet()) {
-      PlayerState playeState = playerStatusEntry.getValue();
-      int vps = playeState.getActualVictoryPoints();
+      PlayerState playerState = playerStatusEntry.getValue();
+      int vps = playerState.actualVictoryPoints;
       if (vps >= 10) {
         return playerStatusEntry.getKey();
       }
-      int settlementsLeft = playeState.getSettlementsAvailable();
-      int citiesLeft = playeState.getCitiesAvailable();
+      int settlementsLeft = playerState.settlementsAvailable;
+      int citiesLeft = playerState.citiesAvailable;
       if (settlementsLeft == 0 && citiesLeft == 0) {
         return playerStatusEntry.getKey();
       }

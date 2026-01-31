@@ -17,7 +17,7 @@ public class Reducer {
     return switch (action.type) {
       case END_TURN -> endTurn(state, action);
       case ROLL -> roll(state, action);
-      case BUILD_SETTLEMENT -> initialBuildSettlement(state, action);
+      case BUILD_SETTLEMENT -> buildSettlement(state, action);
       default -> null;
     };
   }
@@ -97,7 +97,7 @@ public class Reducer {
         new Action<>(action.color, action.type, new int[] {d1, d2}), new int[] {d1, d2});
   }
 
-  private static ActionRecord<?> initialBuildSettlement(State s, Action<?> a) {
+  private static ActionRecord<?> buildSettlement(State s, Action<?> a) {
     if (s.isInitialBuildPhase) {
       // Advance prompts as in snake placement (simplified)
       // Award 1 VP for settlement and consume piece.
