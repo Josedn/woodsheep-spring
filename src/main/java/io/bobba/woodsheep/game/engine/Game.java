@@ -13,7 +13,7 @@ public class Game {
   public final State state;
   public List<Action<?>> playableActions;
 
-  public Game(List<Player> players) {
+  public Game(List<? extends Player> players) {
     this.state = new State(players);
   }
 

@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class State {
-  public final List<Player> players;
+  public final List<? extends Player> players;
   public final List<PlayerColor> colors;
 
   public int[] bank = Decks.startingResourceBank();
@@ -38,7 +38,7 @@ public class State {
   public boolean isRoadBuilding = false;
   public int freeRoadsAvailable = 0;
 
-  public State(List<Player> players) {
+  public State(List<? extends Player> players) {
     this.players = players;
     this.map = CatanMap.base();
     this.board = new Board(map);

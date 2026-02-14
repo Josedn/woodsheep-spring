@@ -1,5 +1,6 @@
 package io.bobba.woodsheep.core.communication.incoming.room;
 
+import io.bobba.woodsheep.core.communication.protocol.EmptyObjectPayload;
 import io.bobba.woodsheep.core.communication.protocol.IncomingEventHandler;
 import io.bobba.woodsheep.core.communication.protocol.OpCode;
 import io.bobba.woodsheep.core.gameclients.GameClient;
@@ -11,25 +12,22 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@OpCode("chatMessage")
+@OpCode("roomStartGame")
 @RequiredArgsConstructor
-public class SendChatMessageHandler
-    implements IncomingEventHandler<SendChatMessageHandler.SendChatMessageMessage> {
-  public record SendChatMessageMessage(String message) {}
-
+public class StartGameHandler implements IncomingEventHandler<EmptyObjectPayload> {
   @Override
-  public void handle(GameClient session, SendChatMessageMessage payload) {
+  public void handle(GameClient session, EmptyObjectPayload payload) {
     final User user = session.getUser();
     if (user != null) {
       final Room room = user.getCurrentRoom();
       if (room != null) {
-        room.handleChatMessage(user, payload.message());
+        room.handleStartGame(user);
       }
     }
   }
 
   @Override
-  public Class<SendChatMessageMessage> payloadType() {
-    return SendChatMessageMessage.class;
+  public Class<EmptyObjectPayload> payloadType() {
+    return EmptyObjectPayload.class;
   }
 }
