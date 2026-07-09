@@ -6,6 +6,7 @@ import io.bobba.woodsheep.core.communication.outgoing.room.GameStateComposer;
 import io.bobba.woodsheep.core.communication.outgoing.room.GameStateComposer.TilePayload;
 import io.bobba.woodsheep.core.communication.outgoing.room.RemoveUserFromRoomComposer;
 import io.bobba.woodsheep.core.communication.outgoing.room.RoomInfoComposer;
+import io.bobba.woodsheep.core.communication.outgoing.room.RoomRejectedComposer;
 import io.bobba.woodsheep.core.communication.protocol.OutgoingMessage;
 import io.bobba.woodsheep.core.users.User;
 import io.bobba.woodsheep.game.engine.Game;
@@ -23,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class Room {
 
+  private static final int MAX_PLAYERS = 4;
   private final String id;
   private final Map<Integer, RoomUser> users = new ConcurrentHashMap<>();
   private int userCounter = 0;
@@ -62,16 +64,31 @@ public class Room {
     }
   }
 
-  public void addUserToRoom(User user) {
-    if (user.getSession() != null) {
-      // TODO: Assign an available color
-      RoomUser roomUser = new RoomUser(this.userCounter++, user, PlayerColor.BLUE);
-      user.setCurrentRoom(this);
-      this.sendMessage(new AddUserToRoomComposer(roomUser));
-      this.users.put(roomUser.getVirtualId(), roomUser);
-      this.serializeRoomInfo(user);
-      log.debug("User added to room: {}", user.getUsername());
+  private PlayerColor nextAvailableColor() {
+    var takenColors =
+        getUnSyncUsers().stream().map(ru -> ru.color).collect(java.util.stream.Collectors.toSet());
+    for (PlayerColor color : PlayerColor.values()) {
+      if (!takenColors.contains(color)) {
+        return color;
+      }
     }
+    return PlayerColor.values()[0];
+  }
+
+  public void addUserToRoom(User user) {
+    if (user.getSession() == null) {
+      return;
+    }
+    if (users.size() >= MAX_PLAYERS) {
+      user.getSession().sendMessage(new RoomRejectedComposer("full"));
+      return;
+    }
+    RoomUser roomUser = new RoomUser(this.userCounter++, user, nextAvailableColor());
+    user.setCurrentRoom(this);
+    this.sendMessage(new AddUserToRoomComposer(roomUser));
+    this.users.put(roomUser.getVirtualId(), roomUser);
+    this.serializeRoomInfo(user);
+    log.debug("User added to room: {}", user.getUsername());
   }
 
   public void serializeRoomInfo(User user) {

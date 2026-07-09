@@ -5,6 +5,8 @@ import static org.mockito.Mockito.*;
 
 import io.bobba.woodsheep.core.gameclients.GameClient;
 import io.bobba.woodsheep.core.users.User;
+import io.bobba.woodsheep.game.model.PlayerColor;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.socket.TextMessage;
@@ -112,6 +114,36 @@ class RoomTest {
     room.handleStartGame(user);
 
     assertThat(room.getRoomState()).isEqualTo(RoomState.IN_GAME);
+  }
+
+  @Test
+  void addUserToRoom_eachUserGetsDistinctColor() throws Exception {
+    List<User> users = List.of(makeUser("u-1"), makeUser("u-2"), makeUser("u-3"), makeUser("u-4"));
+    for (User u : users) {
+      room.addUserToRoom(u);
+    }
+
+    List<PlayerColor> colors = room.getUnSyncUsers().stream().map(ru -> ru.color).toList();
+    assertThat(colors).doesNotHaveDuplicates();
+    assertThat(colors).containsExactlyInAnyOrder(PlayerColor.values());
+  }
+
+  @Test
+  void addUserToRoom_roomFull_sendsRoomRejected() throws Exception {
+    for (int i = 1; i <= 4; i++) {
+      room.addUserToRoom(makeUser("u-" + i));
+    }
+    User fifth = makeUser("u-5");
+    WebSocketSession fifthWs = (WebSocketSession) fifth.getSession().getSession();
+    clearInvocations(fifthWs);
+
+    room.addUserToRoom(fifth);
+
+    verify(fifthWs)
+        .sendMessage(
+            argThat(m -> m instanceof TextMessage tm && tm.getPayload().contains("roomRejected")));
+    assertThat(fifth.getCurrentRoom()).isNull();
+    assertThat(room.getUnSyncUsers()).hasSize(4);
   }
 
   @Test
