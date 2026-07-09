@@ -35,20 +35,20 @@ public class RoomManager {
     if (newRoom != null) {
       newRoom.addUserToRoom(user);
     } else {
-      user.getSession().sendMessage(new RoomRejectedComposer("invalid"));
+      if (user.getSession() != null) {
+        user.getSession().sendMessage(new RoomRejectedComposer("invalid"));
+      }
     }
   }
 
   public void sendRoomList(User user) {
     List<Room> roomsCopy = this.getUnSyncRooms();
-    user.getSession().sendMessage(new RoomListComposer(roomsCopy));
+    if (user.getSession() != null) {
+      user.getSession().sendMessage(new RoomListComposer(roomsCopy));
+    }
   }
 
   private List<Room> getUnSyncRooms() {
-    List<Room> roomsCopy;
-    synchronized (rooms) {
-      roomsCopy = new ArrayList<>(rooms.values());
-    }
-    return roomsCopy;
+    return new ArrayList<>(rooms.values());
   }
 }

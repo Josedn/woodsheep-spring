@@ -14,13 +14,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import lombok.Data;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-@Data
+@Getter
 public class Room {
 
   private final String id;
@@ -64,6 +64,7 @@ public class Room {
 
   public void addUserToRoom(User user) {
     if (user.getSession() != null) {
+      // TODO: Assign an available color
       RoomUser roomUser = new RoomUser(this.userCounter++, user, PlayerColor.BLUE);
       user.setCurrentRoom(this);
       this.sendMessage(new AddUserToRoomComposer(roomUser));
@@ -81,8 +82,11 @@ public class Room {
 
   public void sendMessage(OutgoingMessage outgoingMessage) {
     List<RoomUser> usersCopy = getUnSyncUsers();
-    for (RoomUser user : usersCopy) {
-      user.getUser().getSession().sendMessage(outgoingMessage);
+    for (RoomUser roomUser : usersCopy) {
+      User user = roomUser.getUser();
+      if (user.getSession() != null) {
+        user.getSession().sendMessage(outgoingMessage);
+      }
     }
   }
 
