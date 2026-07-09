@@ -14,7 +14,10 @@ public class AddUserToRoomComposer extends OutgoingMessage {
         roomUsers.stream()
             .map(
                 roomUser ->
-                    new UserRecord(roomUser.getVirtualId(), roomUser.getUser().getUsername()))
+                    new UserRecord(
+                        roomUser.getVirtualId(),
+                        roomUser.getUser().getUsername(),
+                        roomUser.getColor().toString()))
             .toList();
   }
 
@@ -27,5 +30,5 @@ public class AddUserToRoomComposer extends OutgoingMessage {
     return this.roomUsers;
   }
 
-  public record UserRecord(int virtualId, String username) {}
+  public record UserRecord(int virtualId, String username, String color) {}
 }
