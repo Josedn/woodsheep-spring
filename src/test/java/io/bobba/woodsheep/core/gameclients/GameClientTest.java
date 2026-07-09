@@ -55,8 +55,9 @@ class GameClientTest {
 
     assertThat(client.getUser()).isSameAs(user);
     // LoginOkEventComposer is sent automatically
-    verify(session).sendMessage(
-        argThat(msg -> msg instanceof TextMessage tm && tm.getPayload().contains("loginOk")));
+    verify(session)
+        .sendMessage(
+            argThat(msg -> msg instanceof TextMessage tm && tm.getPayload().contains("loginOk")));
   }
 
   @Test
