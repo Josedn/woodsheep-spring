@@ -1,26 +1,29 @@
 package io.bobba.woodsheep.core.rooms;
 
+import io.bobba.catanatron.enums.Color;
+import io.bobba.catanatron.state.Player;
 import io.bobba.woodsheep.core.users.User;
-import io.bobba.woodsheep.game.engine.Game;
-import io.bobba.woodsheep.game.engine.Player;
-import io.bobba.woodsheep.game.model.PlayerColor;
-import io.bobba.woodsheep.game.model.actions.Action;
-import java.util.List;
 import lombok.Data;
 
 @Data
-public class RoomUser extends Player {
+public class RoomUser implements Player {
   private final int virtualId;
   private final User user;
+  private final Color color;
 
-  protected RoomUser(int virtualId, User user, PlayerColor color) {
-    super(color, false);
+  protected RoomUser(int virtualId, User user, Color color) {
     this.virtualId = virtualId;
     this.user = user;
+    this.color = color;
   }
 
   @Override
-  public Action<?> decide(Game game, List<Action<?>> playable) {
-    return null;
+  public Color getColor() {
+    return this.color;
+  }
+
+  @Override
+  public boolean isBot() {
+    return false;
   }
 }

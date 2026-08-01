@@ -3,9 +3,9 @@ package io.bobba.woodsheep.core.rooms;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+import io.bobba.catanatron.enums.Color;
 import io.bobba.woodsheep.core.gameclients.GameClient;
 import io.bobba.woodsheep.core.users.User;
-import io.bobba.woodsheep.game.model.PlayerColor;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -123,9 +123,9 @@ class RoomTest {
       room.addUserToRoom(u);
     }
 
-    List<PlayerColor> colors = room.getUnSyncUsers().stream().map(ru -> ru.color).toList();
+    List<Color> colors = room.getUnSyncUsers().stream().map(RoomUser::getColor).toList();
     assertThat(colors).doesNotHaveDuplicates();
-    assertThat(colors).containsExactlyInAnyOrder(PlayerColor.values());
+    assertThat(colors).containsExactlyInAnyOrder(Color.values());
   }
 
   @Test

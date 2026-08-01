@@ -1,16 +1,15 @@
 package io.bobba.woodsheep.core.rooms;
 
+import io.bobba.catanatron.enums.Color;
+import io.bobba.catanatron.game.Game;
 import io.bobba.woodsheep.core.communication.outgoing.room.AddUserToRoomComposer;
 import io.bobba.woodsheep.core.communication.outgoing.room.ChatMessageComposer;
 import io.bobba.woodsheep.core.communication.outgoing.room.GameStateComposer;
-import io.bobba.woodsheep.core.communication.outgoing.room.GameStateComposer.TilePayload;
 import io.bobba.woodsheep.core.communication.outgoing.room.RemoveUserFromRoomComposer;
 import io.bobba.woodsheep.core.communication.outgoing.room.RoomInfoComposer;
 import io.bobba.woodsheep.core.communication.outgoing.room.RoomRejectedComposer;
 import io.bobba.woodsheep.core.communication.protocol.OutgoingMessage;
 import io.bobba.woodsheep.core.users.User;
-import io.bobba.woodsheep.game.engine.Game;
-import io.bobba.woodsheep.game.model.PlayerColor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,7 @@ public class Room {
   private Game game;
 
   public OutgoingMessage generateGameStateMessage() {
-    List<TilePayload> tilesState = List.of();
+    /*List<TilePayload> tilesState = List.of();
     if (roomState == RoomState.IN_GAME) {
       final var landTiles = game.state.map.landTiles;
       tilesState =
@@ -50,8 +49,8 @@ public class Room {
                         coordinate.s);
                   })
               .toList();
-    }
-    return new GameStateComposer(this.roomState.toString(), tilesState);
+    }*/
+    return new GameStateComposer(this.roomState.toString(), List.of());
   }
 
   public void removeUserFromRoom(User user) {
@@ -64,15 +63,17 @@ public class Room {
     }
   }
 
-  private PlayerColor nextAvailableColor() {
+  private Color nextAvailableColor() {
     var takenColors =
-        getUnSyncUsers().stream().map(ru -> ru.color).collect(java.util.stream.Collectors.toSet());
-    for (PlayerColor color : PlayerColor.values()) {
+        getUnSyncUsers().stream()
+            .map(RoomUser::getColor)
+            .collect(java.util.stream.Collectors.toSet());
+    for (Color color : Color.values()) {
       if (!takenColors.contains(color)) {
         return color;
       }
     }
-    return PlayerColor.values()[0];
+    return Color.values()[0];
   }
 
   public void addUserToRoom(User user) {
@@ -132,7 +133,8 @@ public class Room {
     // TODO: Check if user is host
     if (this.game == null && this.roomState == RoomState.WAITING) {
       this.roomState = RoomState.IN_GAME;
-      this.game = new Game(getUnSyncUsers());
+      // TODO: Create game
+      // this.game = new Game(getUnSyncUsers());
       sendMessage(generateGameStateMessage());
     }
   }
