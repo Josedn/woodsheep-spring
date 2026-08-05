@@ -1,8 +1,8 @@
 package io.bobba.woodsheep.core.rooms;
 
-import io.bobba.catanatron.enums.Color;
-import io.bobba.catanatron.enums.Resource;
-import io.bobba.catanatron.game.Game;
+import com.catanatron.core.enums.Color;
+import com.catanatron.core.enums.Resource;
+import com.catanatron.core.game.Game;
 import io.bobba.woodsheep.core.communication.outgoing.room.AddUserToRoomComposer;
 import io.bobba.woodsheep.core.communication.outgoing.room.ChatMessageComposer;
 import io.bobba.woodsheep.core.communication.outgoing.room.GameStateComposer;

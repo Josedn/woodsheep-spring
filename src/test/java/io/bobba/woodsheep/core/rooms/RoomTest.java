@@ -3,7 +3,7 @@ package io.bobba.woodsheep.core.rooms;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-import io.bobba.catanatron.enums.Color;
+import com.catanatron.core.enums.Color;
 import io.bobba.woodsheep.core.gameclients.GameClient;
 import io.bobba.woodsheep.core.users.User;
 import java.util.List;
