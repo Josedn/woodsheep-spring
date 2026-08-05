@@ -36,10 +36,12 @@ public class Room {
 
   public OutgoingMessage generateGameStateMessage() {
     List<GameStateComposer.TilePayload> tilesState = List.of();
+    List<GameStateComposer.BuildingPayload> buildingsState = List.of();
+    List<GameStateComposer.RoadPayload> roadsState = List.of();
     if (roomState == RoomState.IN_GAME) {
-      final var landTiles = game.state.board.map.landTiles;
+      final var board = game.state.board;
       tilesState =
-          landTiles.entrySet().stream()
+          board.map.landTiles.entrySet().stream()
               .map(
                   coordinateTileEntry -> {
                     final var tile = coordinateTileEntry.getValue();
@@ -53,8 +55,24 @@ public class Room {
                         coordinate.z());
                   })
               .toList();
+      buildingsState =
+          board.buildings.entrySet().stream()
+              .map(
+                  entry ->
+                      new GameStateComposer.BuildingPayload(
+                          entry.getKey(),
+                          entry.getValue()[0].toString(),
+                          board.buildingTypes.get(entry.getKey()).toString()))
+              .toList();
+      roadsState =
+          board.roads.entrySet().stream()
+              .map(
+                  entry ->
+                      new GameStateComposer.RoadPayload(
+                          entry.getKey().a(), entry.getKey().b(), entry.getValue().toString()))
+              .toList();
     }
-    return new GameStateComposer(this.roomState.toString(), tilesState);
+    return new GameStateComposer(this.roomState.toString(), tilesState, buildingsState, roadsState);
   }
 
   public void removeUserFromRoom(User user) {
