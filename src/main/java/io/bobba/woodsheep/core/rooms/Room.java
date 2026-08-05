@@ -1,6 +1,7 @@
 package io.bobba.woodsheep.core.rooms;
 
 import io.bobba.catanatron.enums.Color;
+import io.bobba.catanatron.enums.Resource;
 import io.bobba.catanatron.game.Game;
 import io.bobba.woodsheep.core.communication.outgoing.room.AddUserToRoomComposer;
 import io.bobba.woodsheep.core.communication.outgoing.room.ChatMessageComposer;
@@ -13,6 +14,8 @@ import io.bobba.woodsheep.core.users.User;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -29,28 +32,29 @@ public class Room {
   private int userCounter = 0;
   private RoomState roomState = RoomState.WAITING;
   private Game game;
+  private static final Random RNG = new Random();
 
   public OutgoingMessage generateGameStateMessage() {
-    /*List<TilePayload> tilesState = List.of();
+    List<GameStateComposer.TilePayload> tilesState = List.of();
     if (roomState == RoomState.IN_GAME) {
-      final var landTiles = game.state.map.landTiles;
+      final var landTiles = game.state.board.map.landTiles;
       tilesState =
           landTiles.entrySet().stream()
               .map(
                   coordinateTileEntry -> {
                     final var tile = coordinateTileEntry.getValue();
                     final var coordinate = coordinateTileEntry.getKey();
-                    return new TilePayload(
-                        tile.id(),
-                        tile.resource().toString(),
-                        tile.number(),
-                        coordinate.q,
-                        coordinate.r,
-                        coordinate.s);
+                    return new GameStateComposer.TilePayload(
+                        tile.id,
+                        Optional.ofNullable(tile.resource).map(Resource::toString).orElse("DESERT"),
+                        Optional.ofNullable(tile.number).orElse(0),
+                        coordinate.x(),
+                        coordinate.y(),
+                        coordinate.z());
                   })
               .toList();
-    }*/
-    return new GameStateComposer(this.roomState.toString(), List.of());
+    }
+    return new GameStateComposer(this.roomState.toString(), tilesState);
   }
 
   public void removeUserFromRoom(User user) {
@@ -133,8 +137,8 @@ public class Room {
     // TODO: Check if user is host
     if (this.game == null && this.roomState == RoomState.WAITING) {
       this.roomState = RoomState.IN_GAME;
-      // TODO: Create game
-      // this.game = new Game(getUnSyncUsers());
+      this.game =
+          new Game(new ArrayList<>(users.values()), RNG.nextLong(), 7, false, 10, null, true);
       sendMessage(generateGameStateMessage());
     }
   }
