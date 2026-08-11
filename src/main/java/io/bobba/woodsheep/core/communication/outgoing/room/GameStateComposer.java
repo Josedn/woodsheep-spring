@@ -19,7 +19,9 @@ public class GameStateComposer extends OutgoingMessage {
       List<PlayerPayload> players,
       String yourColor,
       Map<String, Integer> yourHand,
-      List<String> playableActionTypes) {
+      List<String> playableActionTypes,
+      Map<String, Integer> bankResources,
+      int bankDevCardCount) {
     super("gameState");
     this.payload =
         new Payload(
@@ -34,7 +36,9 @@ public class GameStateComposer extends OutgoingMessage {
             players,
             yourColor,
             yourHand,
-            playableActionTypes);
+            playableActionTypes,
+            bankResources,
+            bankDevCardCount);
   }
 
   @Override
@@ -54,7 +58,9 @@ public class GameStateComposer extends OutgoingMessage {
       List<PlayerPayload> players,
       String yourColor,
       Map<String, Integer> yourHand,
-      List<String> playableActionTypes) {}
+      List<String> playableActionTypes,
+      Map<String, Integer> bankResources,
+      int bankDevCardCount) {}
 
   public record TilePayload(int id, String resource, int number, int q, int r, int s) {}
 
@@ -65,9 +71,14 @@ public class GameStateComposer extends OutgoingMessage {
   /** Publicly-known info about a player — no hidden hand contents. */
   public record PlayerPayload(
       String color,
+      String username,
+      boolean isBot,
       int visibleVictoryPoints,
+      int realVictoryPoints,
       int resourceCount,
       int devCardCount,
+      int armyCount,
+      int roadLength,
       boolean hasLongestRoad,
       boolean hasLargestArmy) {}
 }

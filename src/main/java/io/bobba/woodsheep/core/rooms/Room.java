@@ -2,6 +2,7 @@ package io.bobba.woodsheep.core.rooms;
 
 import com.catanatron.core.enums.ActionType;
 import com.catanatron.core.enums.Color;
+import com.catanatron.core.enums.DevCard;
 import com.catanatron.core.enums.Resource;
 import com.catanatron.core.game.Game;
 import com.catanatron.core.state.Action;
@@ -61,6 +62,8 @@ public class Room {
     List<GameStateComposer.PlayerPayload> players = List.of();
     Map<String, Integer> yourHand = null;
     List<String> playableActionTypes = List.of();
+    Map<String, Integer> bankResources = Map.of();
+    int bankDevCardCount = 0;
 
     if (roomState == RoomState.IN_GAME) {
       final var state = game.state;
@@ -103,18 +106,36 @@ public class Room {
 
       Color longestRoadColor = StateFunctions.getLongestRoadColor(state);
       Color largestArmyColor = (Color) StateFunctions.getLargestArmy(state)[0];
+      Map<Color, RoomUser> colorToRoomUser = new java.util.HashMap<>();
+      for (RoomUser roomUser : getUnSyncUsers()) {
+        colorToRoomUser.put(roomUser.getColor(), roomUser);
+      }
       players =
           Arrays.stream(state.colors)
               .map(
-                  c ->
-                      new GameStateComposer.PlayerPayload(
-                          c.toString(),
-                          StateFunctions.getVisibleVictoryPoints(state, c),
-                          StateFunctions.playerNumResourceCards(state, c),
-                          StateFunctions.getDevCardsInHandTotal(state, c),
-                          c == longestRoadColor,
-                          c == largestArmyColor))
+                  c -> {
+                    RoomUser roomUser = colorToRoomUser.get(c);
+                    var playerState = state.playerState(c);
+                    return new GameStateComposer.PlayerPayload(
+                        c.toString(),
+                        roomUser != null ? roomUser.getUser().getUsername() : c.toString(),
+                        roomUser != null && roomUser.isBot(),
+                        StateFunctions.getVisibleVictoryPoints(state, c),
+                        c == viewerColor
+                            ? StateFunctions.getActualVictoryPoints(state, c)
+                            : StateFunctions.getVisibleVictoryPoints(state, c),
+                        StateFunctions.playerNumResourceCards(state, c),
+                        StateFunctions.getDevCardsInHandTotal(state, c),
+                        playerState.devCardsPlayed[DevCard.KNIGHT.ordinal()],
+                        playerState.longestRoadLength,
+                        c == longestRoadColor,
+                        c == largestArmyColor);
+                  })
               .toList();
+
+      bankResources = new LinkedHashMap<>();
+      for (Resource r : Resource.ALL) bankResources.put(r.toString(), state.resourceFreqdeck[r.ordinal()]);
+      bankDevCardCount = state.developmentListdeck.size();
 
       if (viewerColor != null && state.colorToIndex.containsKey(viewerColor)) {
         int[] hand = state.playerState(viewerColor).resourcesInHand;
@@ -143,7 +164,9 @@ public class Room {
         players,
         viewerColor != null ? viewerColor.toString() : null,
         yourHand,
-        playableActionTypes);
+        playableActionTypes,
+        bankResources,
+        bankDevCardCount);
   }
 
   /** Sends each room member their own personalized game-state view. */
