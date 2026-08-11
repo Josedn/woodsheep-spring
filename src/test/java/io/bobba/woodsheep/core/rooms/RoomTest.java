@@ -3,7 +3,9 @@ package io.bobba.woodsheep.core.rooms;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+import com.catanatron.core.enums.ActionPrompt;
 import com.catanatron.core.enums.Color;
+import com.catanatron.core.game.Game;
 import io.bobba.woodsheep.core.gameclients.GameClient;
 import io.bobba.woodsheep.core.users.User;
 import java.util.List;
@@ -165,5 +167,84 @@ class RoomTest {
 
     assertThat(json).contains("IN_GAME");
     assertThat(json).doesNotContain("\"tiles\":[]");
+  }
+
+  @Test
+  void handleRoll_beforeInitialBuildPhaseComplete_isRejectedAndNoRollRecorded() throws Exception {
+    User user = makeUser("u-1");
+    room.addUserToRoom(user);
+    room.handleStartGame(user);
+
+    room.handleRoll(user);
+
+    assertThat(room.getLastRoll()).isNull();
+  }
+
+  @Test
+  void handleRoll_afterInitialBuildPhase_rollsAndMarksPlayerAsRolled() throws Exception {
+    User user = makeUser("u-1");
+    room.addUserToRoom(user);
+    room.handleStartGame(user);
+    advanceToPlayTurn(room.getGame());
+    Color color = room.getUnSyncUsers().get(0).getColor();
+
+    room.handleRoll(user);
+
+    assertThat(room.getLastRoll()).isNotNull();
+    assertThat(room.getGame().state.playerState(color).hasRolled).isTrue();
+  }
+
+  @Test
+  void handleEndTurn_beforeRolling_isRejected() throws Exception {
+    User user = makeUser("u-1");
+    room.addUserToRoom(user);
+    room.handleStartGame(user);
+    advanceToPlayTurn(room.getGame());
+    int turnsBefore = room.getGame().state.numTurns;
+
+    room.handleEndTurn(user);
+
+    assertThat(room.getGame().state.numTurns).isEqualTo(turnsBefore);
+  }
+
+  @Test
+  void handleRoll_byUserNotInRoom_doesNothing() throws Exception {
+    User owner = makeUser("u-owner");
+    User outsider = makeUser("u-outsider");
+    room.addUserToRoom(owner);
+    room.handleStartGame(owner);
+    advanceToPlayTurn(room.getGame());
+
+    room.handleRoll(outsider);
+
+    assertThat(room.getLastRoll()).isNull();
+  }
+
+  @Test
+  void generateGameStateMessage_includesOwnHandButHidesOthersExactCards() throws Exception {
+    User a = makeUser("u-a");
+    User b = makeUser("u-b");
+    room.addUserToRoom(a);
+    room.addUserToRoom(b);
+    room.handleStartGame(a);
+    Color colorA =
+        room.getUnSyncUsers().stream().filter(ru -> ru.getUser() == a).findFirst().get().getColor();
+
+    String json = room.generateGameStateMessage(colorA).stringify();
+
+    assertThat(json).contains("\"yourColor\":\"" + colorA + "\"");
+    assertThat(json).contains("\"yourHand\":{");
+    assertThat(json).doesNotContain("resourcesInHand");
+  }
+
+  /** Fast-forwards the initial build phase by always taking the first playable action. */
+  private void advanceToPlayTurn(Game game) {
+    int guard = 0;
+    while (game.state.currentPrompt != ActionPrompt.PLAY_TURN) {
+      game.execute(game.playableActions.get(0), true, null);
+      if (++guard > 1000) {
+        throw new IllegalStateException("Failed to reach PLAY_TURN within guard limit");
+      }
+    }
   }
 }

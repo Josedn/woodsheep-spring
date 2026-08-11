@@ -1,8 +1,12 @@
 package io.bobba.woodsheep.core.rooms;
 
+import com.catanatron.core.enums.ActionType;
 import com.catanatron.core.enums.Color;
 import com.catanatron.core.enums.Resource;
 import com.catanatron.core.game.Game;
+import com.catanatron.core.state.Action;
+import com.catanatron.core.state.ActionRecord;
+import com.catanatron.core.state.StateFunctions;
 import io.bobba.woodsheep.core.communication.outgoing.room.AddUserToRoomComposer;
 import io.bobba.woodsheep.core.communication.outgoing.room.ChatMessageComposer;
 import io.bobba.woodsheep.core.communication.outgoing.room.GameStateComposer;
@@ -12,6 +16,8 @@ import io.bobba.woodsheep.core.communication.outgoing.room.RoomRejectedComposer;
 import io.bobba.woodsheep.core.communication.protocol.OutgoingMessage;
 import io.bobba.woodsheep.core.users.User;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,14 +38,33 @@ public class Room {
   private int userCounter = 0;
   private RoomState roomState = RoomState.WAITING;
   private Game game;
+  private int[] lastRoll;
   private static final Random RNG = new Random();
 
+  /** Spectator/no-viewer variant — carries no private hand info. */
   public OutgoingMessage generateGameStateMessage() {
+    return generateGameStateMessage(null);
+  }
+
+  /**
+   * Builds a game-state message tailored to {@code viewerColor}: the viewer's own resource hand is
+   * included in full, but only public info (counts, VP, longest road/largest army) is included for
+   * every player, so no one can see an opponent's exact hand.
+   */
+  public OutgoingMessage generateGameStateMessage(Color viewerColor) {
     List<GameStateComposer.TilePayload> tilesState = List.of();
     List<GameStateComposer.BuildingPayload> buildingsState = List.of();
     List<GameStateComposer.RoadPayload> roadsState = List.of();
+    String currentColor = null;
+    String currentTurnColor = null;
+    String currentPrompt = null;
+    List<GameStateComposer.PlayerPayload> players = List.of();
+    Map<String, Integer> yourHand = null;
+    List<String> playableActionTypes = List.of();
+
     if (roomState == RoomState.IN_GAME) {
-      final var board = game.state.board;
+      final var state = game.state;
+      final var board = state.board;
       tilesState =
           board.map.landTiles.entrySet().stream()
               .map(
@@ -71,8 +96,64 @@ public class Room {
                       new GameStateComposer.RoadPayload(
                           entry.getKey().a(), entry.getKey().b(), entry.getValue().toString()))
               .toList();
+
+      currentColor = state.currentColor().toString();
+      currentTurnColor = state.currentTurnColor().toString();
+      currentPrompt = state.currentPrompt.toString();
+
+      Color longestRoadColor = StateFunctions.getLongestRoadColor(state);
+      Color largestArmyColor = (Color) StateFunctions.getLargestArmy(state)[0];
+      players =
+          Arrays.stream(state.colors)
+              .map(
+                  c ->
+                      new GameStateComposer.PlayerPayload(
+                          c.toString(),
+                          StateFunctions.getVisibleVictoryPoints(state, c),
+                          StateFunctions.playerNumResourceCards(state, c),
+                          StateFunctions.getDevCardsInHandTotal(state, c),
+                          c == longestRoadColor,
+                          c == largestArmyColor))
+              .toList();
+
+      if (viewerColor != null && state.colorToIndex.containsKey(viewerColor)) {
+        int[] hand = state.playerState(viewerColor).resourcesInHand;
+        yourHand = new LinkedHashMap<>();
+        for (Resource r : Resource.ALL) yourHand.put(r.toString(), hand[r.ordinal()]);
+
+        if (viewerColor == state.currentColor()) {
+          playableActionTypes =
+              game.playableActions.stream()
+                  .map(action -> action.actionType().toString())
+                  .distinct()
+                  .toList();
+        }
+      }
     }
-    return new GameStateComposer(this.roomState.toString(), tilesState, buildingsState, roadsState);
+
+    return new GameStateComposer(
+        this.roomState.toString(),
+        tilesState,
+        buildingsState,
+        roadsState,
+        currentColor,
+        currentTurnColor,
+        currentPrompt,
+        this.lastRoll,
+        players,
+        viewerColor != null ? viewerColor.toString() : null,
+        yourHand,
+        playableActionTypes);
+  }
+
+  /** Sends each room member their own personalized game-state view. */
+  public void sendGameState() {
+    for (RoomUser roomUser : getUnSyncUsers()) {
+      User user = roomUser.getUser();
+      if (user.getSession() != null) {
+        user.getSession().sendMessage(generateGameStateMessage(roomUser.getColor()));
+      }
+    }
   }
 
   public void removeUserFromRoom(User user) {
@@ -157,7 +238,39 @@ public class Room {
       this.roomState = RoomState.IN_GAME;
       this.game =
           new Game(new ArrayList<>(users.values()), RNG.nextLong(), 7, false, 10, null, true);
-      sendMessage(generateGameStateMessage());
+      sendGameState();
     }
+  }
+
+  public synchronized void handleRoll(User user) {
+    performAction(user, ActionType.ROLL, null);
+  }
+
+  public synchronized void handleEndTurn(User user) {
+    performAction(user, ActionType.END_TURN, null);
+  }
+
+  /**
+   * Validates that {@code user} may currently play {@code actionType} (it must be their turn and a
+   * legal move per the engine's own playable-actions check), applies it, and broadcasts the
+   * resulting state. Does nothing if the action was illegal.
+   */
+  private void performAction(User user, ActionType actionType, Object value) {
+    if (roomState != RoomState.IN_GAME || game == null) return;
+    RoomUser roomUser = getRoomUserByUser(user);
+    if (roomUser == null) return;
+
+    Action action = new Action(roomUser.getColor(), actionType, value);
+    ActionRecord record;
+    try {
+      record = game.execute(action, true, null);
+    } catch (IllegalArgumentException e) {
+      log.debug("Rejected action {} from {}: {}", action, user.getUsername(), e.getMessage());
+      return;
+    }
+    if (actionType == ActionType.ROLL) {
+      this.lastRoll = (int[]) record.result();
+    }
+    sendGameState();
   }
 }
