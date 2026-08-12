@@ -21,7 +21,10 @@ public class GameStateComposer extends OutgoingMessage {
       Map<String, Integer> yourHand,
       List<String> playableActionTypes,
       Map<String, Integer> bankResources,
-      int bankDevCardCount) {
+      int bankDevCardCount,
+      List<Integer> buildableSettlementNodeIds,
+      List<Integer> buildableCityNodeIds,
+      List<EdgePayload> buildableRoadEdges) {
     super("gameState");
     this.payload =
         new Payload(
@@ -38,7 +41,10 @@ public class GameStateComposer extends OutgoingMessage {
             yourHand,
             playableActionTypes,
             bankResources,
-            bankDevCardCount);
+            bankDevCardCount,
+            buildableSettlementNodeIds,
+            buildableCityNodeIds,
+            buildableRoadEdges);
   }
 
   @Override
@@ -60,13 +66,19 @@ public class GameStateComposer extends OutgoingMessage {
       Map<String, Integer> yourHand,
       List<String> playableActionTypes,
       Map<String, Integer> bankResources,
-      int bankDevCardCount) {}
+      int bankDevCardCount,
+      List<Integer> buildableSettlementNodeIds,
+      List<Integer> buildableCityNodeIds,
+      List<EdgePayload> buildableRoadEdges) {}
 
-  public record TilePayload(int id, String resource, int number, int q, int r, int s) {}
+  public record TilePayload(
+      int id, String resource, int number, int q, int r, int s, Map<String, Integer> nodes) {}
 
   public record BuildingPayload(int nodeId, String color, String type) {}
 
   public record RoadPayload(int nodeA, int nodeB, String color) {}
+
+  public record EdgePayload(int nodeA, int nodeB) {}
 
   /** Publicly-known info about a player — no hidden hand contents. */
   public record PlayerPayload(

@@ -4,8 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 import com.catanatron.core.enums.ActionPrompt;
+import com.catanatron.core.enums.BuildingType;
 import com.catanatron.core.enums.Color;
+import com.catanatron.core.game.Actions;
 import com.catanatron.core.game.Game;
+import com.catanatron.core.models.EdgeId;
+import com.catanatron.core.state.StateFunctions;
 import io.bobba.woodsheep.core.gameclients.GameClient;
 import io.bobba.woodsheep.core.users.User;
 import java.util.List;
@@ -235,6 +239,122 @@ class RoomTest {
     assertThat(json).contains("\"yourColor\":\"" + colorA + "\"");
     assertThat(json).contains("\"yourHand\":{");
     assertThat(json).doesNotContain("resourcesInHand");
+  }
+
+  @Test
+  void handleBuildSettlement_duringInitialBuildPhase_placesSettlementAndAdvancesPrompt()
+      throws Exception {
+    User user = makeUser("u-1");
+    room.addUserToRoom(user);
+    room.handleStartGame(user);
+    Color color = room.getUnSyncUsers().get(0).getColor();
+    int nodeId = (int) room.getGame().playableActions.get(0).value();
+
+    room.handleBuildSettlement(user, nodeId);
+
+    assertThat(room.getGame().state.board.getNodeColor(nodeId)).isEqualTo(color);
+    assertThat(room.getGame().state.currentPrompt).isEqualTo(ActionPrompt.BUILD_INITIAL_ROAD);
+  }
+
+  @Test
+  void handleBuildSettlement_illegalNode_isRejected() throws Exception {
+    User user = makeUser("u-1");
+    room.addUserToRoom(user);
+    room.handleStartGame(user);
+    ActionPrompt promptBefore = room.getGame().state.currentPrompt;
+
+    room.handleBuildSettlement(user, 999999);
+
+    assertThat(room.getGame().state.board.getNodeColor(999999)).isNull();
+    assertThat(room.getGame().state.currentPrompt).isEqualTo(promptBefore);
+  }
+
+  @Test
+  void handleBuildRoad_duringInitialBuildPhase_placesRoad() throws Exception {
+    User user = makeUser("u-1");
+    room.addUserToRoom(user);
+    room.handleStartGame(user);
+    Color color = room.getUnSyncUsers().get(0).getColor();
+    int nodeId = (int) room.getGame().playableActions.get(0).value();
+    room.handleBuildSettlement(user, nodeId);
+    EdgeId edge = (EdgeId) room.getGame().playableActions.get(0).value();
+
+    room.handleBuildRoad(user, edge.a(), edge.b());
+
+    assertThat(room.getGame().state.board.getEdgeColor(edge)).isEqualTo(color);
+  }
+
+  @Test
+  void handleBuildRoad_afterInitialPhase_withResources_buildsRoad() throws Exception {
+    User user = makeUser("u-1");
+    room.addUserToRoom(user);
+    room.handleStartGame(user);
+    advanceToPlayTurn(room.getGame());
+    Color color = room.getUnSyncUsers().get(0).getColor();
+    var hand = room.getGame().state.playerState(color).resourcesInHand;
+    for (int i = 0; i < hand.length; i++) hand[i] = 10;
+    markAsRolled(room.getGame(), color);
+    EdgeId buildable = room.getGame().state.board.buildableEdges(color).get(0);
+
+    room.handleBuildRoad(user, buildable.a(), buildable.b());
+
+    assertThat(room.getGame().state.board.getEdgeColor(buildable)).isEqualTo(color);
+  }
+
+  @Test
+  void handleBuildCity_afterInitialPhase_withResources_upgradesSettlement() throws Exception {
+    User user = makeUser("u-1");
+    room.addUserToRoom(user);
+    room.handleStartGame(user);
+    advanceToPlayTurn(room.getGame());
+    Color color = room.getUnSyncUsers().get(0).getColor();
+    var hand = room.getGame().state.playerState(color).resourcesInHand;
+    for (int i = 0; i < hand.length; i++) hand[i] = 10;
+    markAsRolled(room.getGame(), color);
+    int nodeId =
+        StateFunctions.getPlayerBuildings(room.getGame().state, color, BuildingType.SETTLEMENT)
+            .get(0);
+
+    room.handleBuildCity(user, nodeId);
+
+    assertThat(room.getGame().state.board.getBuildingType(nodeId)).isEqualTo(BuildingType.CITY);
+  }
+
+  @Test
+  void handleBuildCity_withoutSettlementThere_isRejected() throws Exception {
+    User user = makeUser("u-1");
+    room.addUserToRoom(user);
+    room.handleStartGame(user);
+    advanceToPlayTurn(room.getGame());
+    Color color = room.getUnSyncUsers().get(0).getColor();
+    markAsRolled(room.getGame(), color);
+    var hand = room.getGame().state.playerState(color).resourcesInHand;
+    for (int i = 0; i < hand.length; i++) hand[i] = 10;
+
+    room.handleBuildCity(user, 999999);
+
+    assertThat(room.getGame().state.board.getBuildingType(999999)).isNull();
+  }
+
+  @Test
+  void generateGameStateMessage_inGame_tilesIncludeNodeIds() throws Exception {
+    User user = makeUser("u-1");
+    room.addUserToRoom(user);
+    room.handleStartGame(user);
+
+    String json = room.generateGameStateMessage().stringify();
+
+    assertThat(json).contains("\"nodes\":{");
+    assertThat(json).contains("\"NORTH\":");
+  }
+
+  /**
+   * Marks {@code color} as having rolled without exercising real dice RNG, then regenerates
+   * playable actions so BUILD_ROAD/BUILD_SETTLEMENT/BUILD_CITY become available for testing.
+   */
+  private void markAsRolled(Game game, Color color) {
+    game.state.playerState(color).hasRolled = true;
+    game.playableActions = Actions.generatePlayableActions(game.state);
   }
 
   /** Fast-forwards the initial build phase by always taking the first playable action. */

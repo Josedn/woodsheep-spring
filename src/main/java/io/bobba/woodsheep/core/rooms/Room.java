@@ -5,6 +5,7 @@ import com.catanatron.core.enums.Color;
 import com.catanatron.core.enums.DevCard;
 import com.catanatron.core.enums.Resource;
 import com.catanatron.core.game.Game;
+import com.catanatron.core.models.EdgeId;
 import com.catanatron.core.state.Action;
 import com.catanatron.core.state.ActionRecord;
 import com.catanatron.core.state.StateFunctions;
@@ -64,6 +65,9 @@ public class Room {
     List<String> playableActionTypes = List.of();
     Map<String, Integer> bankResources = Map.of();
     int bankDevCardCount = 0;
+    List<Integer> buildableSettlementNodeIds = List.of();
+    List<Integer> buildableCityNodeIds = List.of();
+    List<GameStateComposer.EdgePayload> buildableRoadEdges = List.of();
 
     if (roomState == RoomState.IN_GAME) {
       final var state = game.state;
@@ -74,13 +78,17 @@ public class Room {
                   coordinateTileEntry -> {
                     final var tile = coordinateTileEntry.getValue();
                     final var coordinate = coordinateTileEntry.getKey();
+                    Map<String, Integer> nodeIds = new LinkedHashMap<>();
+                    tile.nodes.forEach(
+                        (nodeRef, nodeId) -> nodeIds.put(nodeRef.toString(), nodeId));
                     return new GameStateComposer.TilePayload(
                         tile.id,
                         Optional.ofNullable(tile.resource).map(Resource::toString).orElse("DESERT"),
                         Optional.ofNullable(tile.number).orElse(0),
                         coordinate.x(),
                         coordinate.y(),
-                        coordinate.z());
+                        coordinate.z(),
+                        nodeIds);
                   })
               .toList();
       buildingsState =
@@ -134,7 +142,8 @@ public class Room {
               .toList();
 
       bankResources = new LinkedHashMap<>();
-      for (Resource r : Resource.ALL) bankResources.put(r.toString(), state.resourceFreqdeck[r.ordinal()]);
+      for (Resource r : Resource.ALL)
+        bankResources.put(r.toString(), state.resourceFreqdeck[r.ordinal()]);
       bankDevCardCount = state.developmentListdeck.size();
 
       if (viewerColor != null && state.colorToIndex.containsKey(viewerColor)) {
@@ -147,6 +156,25 @@ public class Room {
               game.playableActions.stream()
                   .map(action -> action.actionType().toString())
                   .distinct()
+                  .toList();
+          buildableSettlementNodeIds =
+              game.playableActions.stream()
+                  .filter(action -> action.actionType() == ActionType.BUILD_SETTLEMENT)
+                  .map(action -> (Integer) action.value())
+                  .distinct()
+                  .toList();
+          buildableCityNodeIds =
+              game.playableActions.stream()
+                  .filter(action -> action.actionType() == ActionType.BUILD_CITY)
+                  .map(action -> (Integer) action.value())
+                  .distinct()
+                  .toList();
+          buildableRoadEdges =
+              game.playableActions.stream()
+                  .filter(action -> action.actionType() == ActionType.BUILD_ROAD)
+                  .map(action -> (EdgeId) action.value())
+                  .distinct()
+                  .map(edge -> new GameStateComposer.EdgePayload(edge.a(), edge.b()))
                   .toList();
         }
       }
@@ -166,7 +194,10 @@ public class Room {
         yourHand,
         playableActionTypes,
         bankResources,
-        bankDevCardCount);
+        bankDevCardCount,
+        buildableSettlementNodeIds,
+        buildableCityNodeIds,
+        buildableRoadEdges);
   }
 
   /** Sends each room member their own personalized game-state view. */
@@ -271,6 +302,19 @@ public class Room {
 
   public synchronized void handleEndTurn(User user) {
     performAction(user, ActionType.END_TURN, null);
+  }
+
+  public synchronized void handleBuildSettlement(User user, int nodeId) {
+    performAction(user, ActionType.BUILD_SETTLEMENT, nodeId);
+  }
+
+  public synchronized void handleBuildCity(User user, int nodeId) {
+    performAction(user, ActionType.BUILD_CITY, nodeId);
+  }
+
+  public synchronized void handleBuildRoad(User user, int nodeA, int nodeB) {
+    EdgeId edge = nodeA < nodeB ? new EdgeId(nodeA, nodeB) : new EdgeId(nodeB, nodeA);
+    performAction(user, ActionType.BUILD_ROAD, edge);
   }
 
   /**
